@@ -1,0 +1,54 @@
+body, html {
+    background-color: #f3f3f3;
+}
+h2 {
+    font-weight: bold;
+}
+
+.gradient-text {
+    background: linear-gradient(90deg, #3400AE, #AE0000);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: bold;
+}
+
+.sidebar {
+    background-color: #003367; /* Light grey background */
+    height: 100vh; /* Full height */
+}
+
+.sidebar h5 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #007bff; /* Blue color for the header */
+}
+
+.nav-item {
+    margin-bottom: 15px; /* Space between links */
+}
+
+.nav-link {
+    font-size: 16px;
+    color: #495057; /* Dark gray for text */
+    transition: background-color 0.3s ease;
+}
+
+.nav-link:hover {
+    background-color: #007bff; /* Blue background on hover */
+    color: white; /* White text on hover */
+}
+
+.nav-link.active {
+    background-color: #007bff; /* Active link background */
+    color: white; /* White text on active link */
+    font-weight: bold; /* Make active link bold */
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 767px) {
+    .col-md-3 {
+        position: static; /* Make the sidebar stack on top for small screens */
+        height: auto;
+        padding-top: 10px;
+    }
+}

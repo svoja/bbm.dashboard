@@ -1,0 +1,71 @@
+<!-- Bar Chart for Subject with Highest Enrollment -->
+<div class="card shadow-lg rounded">
+    <div class="card-header text-center">
+        <h5 class="mb-0">วิชาที่มีนักเรียนลงทะเบียนมากที่สุด</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="subjectChart" width="400" height="200"></canvas>
+    </div>
+</div>
+
+<!-- Include the Chart.js script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Inject the subjects and studentCounts into the JavaScript
+        const subjects = <%- JSON.stringify(subjects) %>;
+        const studentCounts = <%- JSON.stringify(studentCounts) %>;
+
+        // Define an array of colors (one for each bar)
+        const colors = [
+            'rgba(255, 99, 132, 0.6)', // Red
+            'rgba(54, 162, 235, 0.6)', // Blue
+            'rgba(255, 206, 86, 0.6)', // Yellow
+            'rgba(75, 192, 192, 0.6)', // Green
+            'rgba(153, 102, 255, 0.6)', // Purple
+            'rgba(255, 159, 64, 0.6)', // Orange
+            'rgba(255, 99, 71, 0.6)', // Tomato
+            'rgba(106, 90, 205, 0.6)', // SlateBlue
+            'rgba(0, 255, 127, 0.6)', // SpringGreen
+            'rgba(238, 130, 238, 0.6)' // Violet
+        ];
+
+        // Ensure we don't exceed the number of available colors
+        const barColors = studentCounts.map((_, index) => colors[index % colors.length]);
+
+        // Create the bar chart with the injected data
+        const ctx = document.getElementById('subjectChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: subjects, // Subject names
+                datasets: [{
+                    label: 'จำนวนคน', // Remove label above the bars
+                    data: studentCounts, // Number of students in each subject
+                    backgroundColor: barColors, // Different colors for each bar
+                    borderColor: 'rgba(0, 0, 0, 1)', // Border color
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.raw + ' คน'; // "คน" means "students" in Thai
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 5 }
+                    }
+                }
+            }
+        });
+    });
+</script>
