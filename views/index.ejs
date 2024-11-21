@@ -1,35 +1,44 @@
-<%- include('./partials/header') %>
+<%- include('./partials/_header') %>
 
 <div class="container my-5">
-    <!-- HEADER -->
     <header class="mb-5">
         <div class="text-center">
             <h2 class="fw-bold">BAANBAIMAI DASHBOARD</h2>
             <p class="gradient-text">Made by Phanu</p>
+            <p class="text-muted small mt-3">
+                ข้อมูลจากวันที่ <%= startDate %> ถึง <%= endDate %>
+            </p>
         </div>
     </header>
 
-    <!-- CONTENT -->
-    <main>
-        <p class="text-center text-muted small">
-            ข้อมูลจากวันที่ <%= startDate %> ถึง <%= endDate %>
-        </p>
-
-        <!-- CARDS -->
-        <div class="d-flex flex-wrap justify-content-center gap-4">
-            <!-- STDS -->
-            <%- include('./partials/studentQuantityCard') %>
-
-            <!-- TECHS -->
-            <%- include('./partials/teacherQuantityCard') %>
-
-            <!-- SUBJS -->
-            <%- include('./partials/subjectQuantityCard') %>
+    <main class="row g-4">
+        <!-- Cards Section -->
+        <div class="col-12">
+            <div class="d-flex flex-wrap justify-content-center gap-4">
+                <%- include('./partials/studentQuantityCard') %>
+                <%- include('./partials/teacherQuantityCard') %>
+                <%- include('./partials/subjectQuantityCard') %>
+            </div>
         </div>
 
-        <!-- CHART -->
-        <div class="my-4"><%- include('./partials/_chart') %></div>
+        <!-- Content Display Section -->
+        <div class="col-12 mt-4">
+            <%- include('./partials/studentList') %>
+        </div>
 
+        <div class="col-12 mt-4">
+            <%- include('./partials/teacherList') %>
+        </div>
+
+        <div class="col-12 mt-4">
+            <%- include('./partials/subjectList') %>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="col-12 mt-4">
+            <%- include('./partials/subjectChart.ejs') %>
+        </div>
     </main>
 </div>
-<%- include('./partials/footer') %>
+
+<%- include('./partials/_footer') %>

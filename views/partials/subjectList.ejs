@@ -1,0 +1,56 @@
+<div id="subjectList" class="card shadow-sm p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="gradient-text mb-0">รายวิชาทั้งหมด</h5>
+        <button type="button" class="btn-close" onclick="toggleContent('subjectList')"></button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>วิชา</th>
+                    <th>จำนวนนักเรียน</th>
+                    <th>ครูผู้สอน</th>
+                    <th>นักเรียน</th>
+                </tr>
+            </thead>
+            <tbody id="subjectTableBody">
+                <!-- Subjects will be dynamically updated -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function fetchSubjects() {
+    fetch('/api/subjects')
+        .then(response => response.json())
+        .then(data => {
+            const subjectTableBody = document.getElementById('subjectTableBody');
+            subjectTableBody.innerHTML = data.subjects.map(subject => `
+                <tr>
+                    <td>${subject.name}</td>
+                    <td>${subject.studentCount}</td>
+                    <td>${subject.teachers.map(teacher => `
+                        <span class="badge rounded-pill bg-success text-white me-1">${teacher.name}</span>
+                    `).join('')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" type="button" onclick="toggleCollapse('subject-${subject.name.replace(/\s/g, '')}')">
+                            รายละเอียด
+                        </button>
+                        <div class="collapse" id="subject-${subject.name.replace(/\s/g, '')}">
+                            <ul class="list-group mt-2" style="width: 100%;">
+                                ${subject.students.map(student => `
+                                    <li class="list-group-item">${student.name} (${student.id})</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        })
+        .catch(error => console.error('Error fetching subjects:', error));
+}
+
+document.addEventListener('DOMContentLoaded', fetchSubjects);
+</script>

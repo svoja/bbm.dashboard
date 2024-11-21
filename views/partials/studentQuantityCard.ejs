@@ -1,7 +1,14 @@
-<div class="col-12 col-md-3">
-  <div class="card w-100">
-      <div class="card-body text-center">
-          จำนวนนักเรียน <span class="badge text-bg-primary mx-2"><%= studentQuantity %></span> คน
+<!-- Student Card -->
+<div class="card bg-white shadow-sm" style="width: 18rem; cursor: pointer;" onclick="toggleContent('studentList')">
+  <div class="card-body p-4">
+      <div class="d-flex justify-content-between align-items-center">
+          <div>
+              <h6 class="text-muted mb-2">จำนวนนักเรียน</h6>
+              <h2 class="mb-0 gradient-text"><%= studentQuantity %></h2>
+          </div>
+          <div style="background-color: var(--primary-color);" class="rounded-circle p-3">
+              <i class="bi bi-mortarboard fs-3 text-white"></i>
+          </div>
       </div>
   </div>
 </div>

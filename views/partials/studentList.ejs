@@ -1,0 +1,125 @@
+<div id="studentList" class="card shadow-sm p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="gradient-text mb-0">รายชื่อนักเรียนทั้งหมด</h5>
+        <button type="button" class="btn-close" onclick="toggleContent('studentList')"></button>
+    </div>
+
+    <div class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <input type="text" class="form-control" id="searchInput" placeholder="ค้นหาชื่อนักเรียน..." onkeyup="fetchStudents(1)">
+            </div>
+            <div class="col-md-6">
+                <select class="form-select" id="subjectFilter" onchange="fetchStudents(1)">
+                    <option value="">ทุกวิชา</option>
+                    <% [...new Set(details.students.flatMap(s => s.classes))].sort().forEach(subject => { %>
+                        <option value="<%= subject %>"><%= subject %></option>
+                    <% }); %>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>รหัส</th>
+                    <th>ชื่อ</th>
+                    <th>วิชาที่เรียน</th>
+                    <th>ครูผู้สอน</th>
+                </tr>
+            </thead>
+            <tbody id="studentTableBody">
+                <!-- Students will be dynamically updated -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+        <div id="studentsCountText" class="text-muted"></div>
+        <nav>
+            <ul class="pagination" id="paginationContainer">
+                <!-- Pagination buttons will be dynamically updated -->
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+
+function fetchStudents(page = 1) {
+    currentPage = page;
+
+    // Get search and filter values
+    const search = document.getElementById('searchInput').value.trim();
+    const subject = document.getElementById('subjectFilter').value;
+
+    // Make AJAX request with search, filter, and page
+    fetch(`/api/students?page=${page}&search=${encodeURIComponent(search)}&subject=${encodeURIComponent(subject)}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update the table body with new students
+            const studentTableBody = document.getElementById('studentTableBody');
+            studentTableBody.innerHTML = data.students.map(student => `
+                <tr>
+                    <td>${student.id}</td>
+                    <td>${student.name}</td>
+                    <td>${student.classes.map(className => `
+                        <span class="badge rounded-pill bg-primary text-white me-1">${className}</span>
+                    `).join('')}</td>
+                    <td>${student.teachers.map(teacherName => `
+                        <span class="badge rounded-pill bg-secondary text-white me-1">${teacherName}</span>
+                    `).join('')}</td>
+                </tr>
+            `).join('');
+
+            // Update showing count
+            const countText = data.totalStudents > 0 
+                ? `แสดง ${data.students.length} จาก ${data.totalStudents} นักเรียน`
+                : 'ไม่พบนักเรียน';
+            document.getElementById('studentsCountText').textContent = countText;
+
+            // Update pagination controls
+            updatePagination(data.pagination);
+        })
+        .catch(error => console.error('Error fetching students:', error));
+}
+
+function updatePagination(pagination) {
+    const paginationContainer = document.getElementById('paginationContainer');
+
+    let paginationHTML = '';
+
+    // Previous button
+    paginationHTML += `
+        <li class="page-item ${pagination.current === 1 ? 'disabled' : ''}">
+            <button class="page-link" onclick="fetchStudents(${pagination.current - 1})">«</button>
+        </li>
+    `;
+
+    // Page numbers
+    for (let i = 1; i <= pagination.total; i++) {
+        paginationHTML += `
+            <li class="page-item ${pagination.current === i ? 'active' : ''}">
+                <button class="page-link" onclick="fetchStudents(${i})">${i}</button>
+            </li>
+        `;
+    }
+
+    // Next button
+    paginationHTML += `
+        <li class="page-item ${pagination.current === pagination.total ? 'disabled' : ''}">
+            <button class="page-link" onclick="fetchStudents(${pagination.current + 1})">»</button>
+        </li>
+    `;
+
+    paginationContainer.innerHTML = paginationHTML;
+}
+
+// Fetch initial students on page load
+document.addEventListener('DOMContentLoaded', () => {
+    fetchStudents();
+});
+</script>

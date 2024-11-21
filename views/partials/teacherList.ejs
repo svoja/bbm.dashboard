@@ -1,0 +1,54 @@
+<div id="teacherList" class="card shadow-sm p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="gradient-text mb-0">รายชื่อครูทั้งหมด</h5>
+        <button type="button" class="btn-close" onclick="toggleContent('teacherList')"></button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>ชื่อ</th>
+                    <th>วิชาที่สอน</th>
+                    <th>นักเรียน</th>
+                </tr>
+            </thead>
+            <tbody id="teacherTableBody">
+                <!-- Teachers will be dynamically updated -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function fetchTeachers() {
+    fetch('/api/teachers')
+        .then(response => response.json())
+        .then(data => {
+            const teacherTableBody = document.getElementById('teacherTableBody');
+            teacherTableBody.innerHTML = data.teachers.map(teacher => `
+                <tr>
+                    <td>${teacher.name}</td>
+                    <td>${teacher.subjects.map(subject => `
+                        <span class="badge rounded-pill bg-success text-white me-1">${subject}</span>
+                    `).join('')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#teacher-${teacher.id}">
+                            รายละเอียด
+                        </button>
+                        <div class="collapse" id="teacher-${teacher.id}">
+                            <ul class="list-group mt-2 style="width: 100%;">
+                                ${teacher.students.map(student => `
+                                    <li class="list-group-item">${student.name} (${student.id})</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        })
+        .catch(error => console.error('Error fetching teachers:', error));
+}
+
+document.addEventListener('DOMContentLoaded', fetchTeachers);
+</script>

@@ -1,7 +1,14 @@
-<div class="col-12 col-md-3">
-    <div class="card w-100">
-        <div class="card-body text-center">
-            จำนวนวิชา <span class="badge text-bg-success mx-2"><%= subjectQuantity %></span> วิชา
+<!-- Subject Card -->
+<div class="card bg-white shadow-sm" style="width: 18rem; cursor: pointer;" onclick="toggleContent('subjectList')">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="text-muted mb-2">จำนวนวิชา</h6>
+                <h2 class="mb-0 gradient-text"><%= subjectQuantity %></h2>
+            </div>
+            <div style="background-color: var(--gradient-end);" class="rounded-circle p-3">
+                <i class="bi bi-book fs-3 text-white"></i>
+            </div>
         </div>
     </div>
 </div>
