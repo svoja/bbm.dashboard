@@ -35,7 +35,7 @@ function fetchSubjects() {
                         <span class="badge rounded-pill bg-success text-white me-1">${teacher.name}</span>
                     `).join('')}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary" type="button" onclick="toggleCollapse('subject-${subject.name.replace(/\s/g, '')}')">
+                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#subject-${subject.name}">
                             รายละเอียด
                         </button>
                         <div class="collapse" id="subject-${subject.name.replace(/\s/g, '')}">
