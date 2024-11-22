@@ -2,7 +2,10 @@ const fs = require('fs');
 
 class DataProcessor {
     constructor(jsonFilePath) {
-        this.data = require(jsonFilePath);
+        const jsonData = require(jsonFilePath);
+        // Access the events array from the correct path
+        this.data = jsonData.data.events;
+        
         this.uniqueStudents = new Map();
         this.uniqueTeachers = new Map();
         this.subjectStudentCount = new Map();
@@ -11,15 +14,27 @@ class DataProcessor {
         this.eventDates = [];
     }
 
+    checkData() {
+        console.log("=== First Event Sample ===");
+        console.log(JSON.stringify(this.data[0], null, 2));
+        
+        console.log("\n=== Data Length ===");
+        console.log(this.data.length);
+    }
+
     processData() {
-        this.data.events.forEach(event => {
-            // Add the date to the eventDates array
-            this.eventDates.push(new Date(event.date));
+        this.data.forEach(event => {
+            // Convert date from DD/MM/YY format to a Date object
+            const [day, month, year] = event.date.split('/');
+            const dateStr = `20${year}-${month}-${day}`; // Convert to YYYY-MM-DD
+            this.eventDates.push(new Date(dateStr));
 
             event.hours.forEach(hour => {
-                hour.students.forEach(student => {
-                    this._processStudent(student);
-                });
+                if (hour.students && hour.students.length > 0) {
+                    hour.students.forEach(student => {
+                        this._processStudent(student);
+                    });
+                }
             });
         });
 
@@ -31,46 +46,54 @@ class DataProcessor {
         if (!this.uniqueStudents.has(student.student_id)) {
             this.uniqueStudents.set(student.student_id, {
                 student_id: student.student_id,
-                name: student.title,
+                name: student.title || `Student ${student.student_id}`, // Fallback if title is missing
                 classes: new Set()
             });
         }
         
         const studentEntry = this.uniqueStudents.get(student.student_id);
-        studentEntry.classes.add(student.class_name);
-        
-        // Track subject student counts
-        if (!this.subjectStudentCount.has(student.class_name)) {
-            this.subjectStudentCount.set(student.class_name, new Set());
+        if (student.class_name) {
+            studentEntry.classes.add(student.class_name);
+            
+            // Track subject student counts
+            if (!this.subjectStudentCount.has(student.class_name)) {
+                this.subjectStudentCount.set(student.class_name, new Set());
+            }
+            this.subjectStudentCount.get(student.class_name).add(student.student_id);
+
+            // Track unique subjects
+            this.uniqueSubjects.add(student.class_name);
         }
-        this.subjectStudentCount.get(student.class_name).add(student.student_id);
 
-        // Track unique subjects
-        this.uniqueSubjects.add(student.class_name);
-
-        // Process teacher details
-        this._processTeacher(student);
+        // Process teacher details if teacher info exists
+        if (student.teacher_id) {
+            this._processTeacher(student);
+        }
     }
 
     _processTeacher(student) {
         if (!this.uniqueTeachers.has(student.teacher_id)) {
             this.uniqueTeachers.set(student.teacher_id, {
                 teacher_id: student.teacher_id,
-                teacher_name: student.teacher_name,
+                teacher_name: student.teacher_name || `Teacher ${student.teacher_id}`,
                 subjects: new Set(),
                 students: new Set()
             });
         }
 
         const teacherEntry = this.uniqueTeachers.get(student.teacher_id);
-        teacherEntry.subjects.add(student.class_name);
+        if (student.class_name) {
+            teacherEntry.subjects.add(student.class_name);
+        }
         teacherEntry.students.add(student.student_id);
 
         // Track subject teacher counts
-        if (!this.subjectTeacherCount.has(student.class_name)) {
-            this.subjectTeacherCount.set(student.class_name, new Set());
+        if (student.class_name) {
+            if (!this.subjectTeacherCount.has(student.class_name)) {
+                this.subjectTeacherCount.set(student.class_name, new Set());
+            }
+            this.subjectTeacherCount.get(student.class_name).add(student.teacher_id);
         }
-        this.subjectTeacherCount.get(student.class_name).add(student.teacher_id);
     }
 
     _formatDate(date) {
@@ -85,7 +108,7 @@ class DataProcessor {
             totalStudents: this.uniqueStudents.size,
             totalTeachers: this.uniqueTeachers.size,
             totalSubjects: this.uniqueSubjects.size,
-            totalEvents: this.data.events.length,
+            totalEvents: this.data.length,
             startDate: this._formatDate(startDate),
             endDate: this._formatDate(endDate),
             details: {
@@ -118,5 +141,6 @@ class DataProcessor {
 }
 
 // Usage
-const processor = new DataProcessor('./bbm_nov.json');
+const processor = new DataProcessor('./data_19-24.json');
+processor.checkData(); // First check the data
 const summary = processor.exportSummary();
