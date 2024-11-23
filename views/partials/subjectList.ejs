@@ -1,3 +1,4 @@
+<!-- Subject List Component -->
 <div id="subjectList" class="card shadow-sm p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h5 class="gradient-text mb-0">รายวิชาทั้งหมด</h5>
@@ -9,48 +10,181 @@
             <thead class="table-light">
                 <tr>
                     <th>วิชา</th>
-                    <th>จำนวนนักเรียน</th>
+                    <th class="text-center">จำนวนนักเรียน</th>
                     <th>ครูผู้สอน</th>
-                    <th>นักเรียน</th>
+                    <th>รายชื่อนักเรียน</th>
                 </tr>
             </thead>
             <tbody id="subjectTableBody">
-                <!-- Subjects will be dynamically updated -->
+                <tr>
+                    <td colspan="4" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">กำลังโหลด...</span>
+                        </div>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
 </div>
 
+<!-- Student List Modal -->
+<div class="modal fade" id="studentListModal" tabindex="-1" aria-labelledby="studentListModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="studentListModalLabel">รายชื่อนักเรียน</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="modalStudentTable">
+                        <thead>
+                            <tr>
+                                <th width="20%">รหัสนักเรียน</th>
+                                <th width="40%">ชื่อ-นามสกุล</th>
+                                <th width="40%">ครูผู้สอน</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+// Initialize modal variable
+let studentListModal;
+
+// Fetch and display subjects
 function fetchSubjects() {
+    const subjectTableBody = document.getElementById('subjectTableBody');
+    
     fetch('/api/subjects')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
         .then(data => {
-            const subjectTableBody = document.getElementById('subjectTableBody');
-            subjectTableBody.innerHTML = data.subjects.map(subject => `
+            if (!data.subjects || data.subjects.length === 0) {
+                subjectTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            <p class="mb-0">ไม่พบข้อมูลรายวิชา</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            subjectTableBody.innerHTML = data.subjects
+                .sort((a, b) => b.studentCount - a.studentCount)
+                .map(subject => {
+                    const hasStudents = subject.students && subject.students.length > 0;
+                    const hasTeachers = subject.teachers && subject.teachers.length > 0;
+
+                    return `
+                        <tr>
+                            <td>
+                                <span class="fw-semibold">${subject.name}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-primary rounded-pill px-3">
+                                    ${subject.studentCount}
+                                </span>
+                            </td>
+                            <td>
+                                ${hasTeachers ? subject.teachers.map(teacher => `
+                                    <span class="badge rounded-pill bg-success me-1">
+                                        ${teacher.name}
+                                    </span>
+                                `).join('') : '<span class="text-muted small">ไม่มีครูผู้สอน</span>'}
+                            </td>
+                            <td>
+                                <button 
+                                    class="btn btn-sm ${hasStudents ? 'btn-outline-primary' : 'btn-outline-secondary'}" 
+                                    type="button" 
+                                    onclick="${hasStudents ? `showStudentList('${subject.name}', ${JSON.stringify(subject).replace(/"/g, '&quot;')})` : ''}"
+                                    ${!hasStudents ? 'disabled' : ''}
+                                >
+                                    <i class="bi bi-people me-1"></i>
+                                    ${hasStudents ? 'แสดงรายชื่อ' : 'ไม่มีนักเรียน'}
+                                    ${hasStudents ? `<span class="ms-1 badge bg-secondary">${subject.students.length}</span>` : ''}
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+        })
+        .catch(error => {
+            console.error('Error fetching subjects:', error);
+            subjectTableBody.innerHTML = `
                 <tr>
-                    <td>${subject.name}</td>
-                    <td>${subject.studentCount}</td>
-                    <td>${subject.teachers.map(teacher => `
-                        <span class="badge rounded-pill bg-success text-white me-1">${teacher.name}</span>
-                    `).join('')}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#subject-${subject.name}">
-                            รายละเอียด
+                    <td colspan="4" class="text-center text-danger py-4">
+                        <p class="mb-2">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
+                        <button onclick="fetchSubjects()" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-arrow-clockwise me-1"></i>โหลดใหม่
                         </button>
-                        <div class="collapse" id="subject-${subject.name.replace(/\s/g, '')}">
-                            <ul class="list-group mt-2" style="width: 100%;">
-                                ${subject.students.map(student => `
-                                    <li class="list-group-item">${student.name} (${student.id})</li>
-                                `).join('')}
-                            </ul>
-                        </div>
                     </td>
                 </tr>
-            `).join('');
-        })
-        .catch(error => console.error('Error fetching subjects:', error));
+            `;
+        });
 }
 
+function showStudentList(subjectName, subject) {
+    try {
+        const modalTitle = document.getElementById('studentListModalLabel');
+        const modalTableBody = document.querySelector('#modalStudentTable tbody');
+        
+        // Update modal title
+        modalTitle.textContent = `รายชื่อนักเรียน - ${subjectName}`;
+        
+        // Update modal table header - First update the thead
+        document.querySelector('#modalStudentTable thead').innerHTML = `
+            <tr>
+                <th width="30%">รหัสนักเรียน</th>
+                <th width="70%">ชื่อ-นามสกุล</th>
+            </tr>
+        `;
+        
+        // Sort and render students
+        const sortedStudents = subject.students
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        modalTableBody.innerHTML = sortedStudents
+            .map((student, index) => {
+                // Use student.id instead of student.bbm_id if that's what's in your data
+                const studentId = student.id || student.bbm_id || 'N/A';
+                
+                return `
+                    <tr>
+                        <td><code class="bg-light px-2 py-1 rounded">${studentId}</code></td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-secondary me-2">${index + 1}</span>
+                                ${student.name || 'ไม่ระบุชื่อ'}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            })
+            .join('');
+
+        if (!studentListModal) {
+            studentListModal = new bootstrap.Modal(document.getElementById('studentListModal'));
+        }
+        studentListModal.show();
+    } catch (error) {
+        console.error('Error showing student list:', error);
+        alert('เกิดข้อผิดพลาดในการแสดงรายชื่อนักเรียน กรุณาลองใหม่อีกครั้ง');
+    }
+}
+
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', fetchSubjects);
 </script>

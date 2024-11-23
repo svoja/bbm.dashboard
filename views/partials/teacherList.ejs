@@ -39,7 +39,7 @@ function fetchTeachers() {
                         <div class="collapse" id="teacher-${teacher.id}">
                             <ul class="list-group mt-2 style="width: 100%;">
                                 ${teacher.students.map(student => `
-                                    <li class="list-group-item">${student.name} (${student.id})</li>
+                                    <li class="list-group-item">${student.name} (${student.bbm_id})</li>
                                 `).join('')}
                             </ul>
                         </div>
