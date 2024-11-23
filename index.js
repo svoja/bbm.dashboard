@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
         const summary = JSON.parse(data);
 
         // Pagination setup
-        const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+        const page = parseInt(req.query.page) || 1;
         const itemsPerPage = 10;
         const startIndex = (page - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
@@ -80,7 +80,7 @@ app.get('/api/students', (req, res) => {
         const studentsWithTeachers = paginatedStudents.map(student => ({
             ...student,
             teachers: summary.details.teachers.filter(teacher =>
-                teacher.students.includes(student.id)
+                teacher.students.includes(student.bbm_id)  // Changed from id to bbm_id
             ).map(teacher => teacher.name)
         }));
 
@@ -108,9 +108,9 @@ app.get('/api/teachers', (req, res) => {
         const teachers = summary.details.teachers.map(teacher => ({
             id: teacher.id,
             name: teacher.name,
-            subjects: teacher.subjects, // List of subjects they teach
+            subjects: teacher.subjects,
             students: summary.details.students.filter(student =>
-                teacher.students.includes(student.id) // Students assigned to this teacher
+                teacher.students.includes(student.bbm_id)  // Changed from id to bbm_id
             )
         }));
 
@@ -139,7 +139,7 @@ app.get('/api/subjects', (req, res) => {
             students: summary.details.students
                 .filter(student => student.classes.includes(subject.subject))
                 .map(student => ({
-                    id: student.id,
+                    id: student.bbm_id,  // Changed from id to bbm_id
                     name: student.name
                 }))
         }));

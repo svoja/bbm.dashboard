@@ -3,7 +3,6 @@ const fs = require('fs');
 class DataProcessor {
     constructor(jsonFilePath) {
         const jsonData = require(jsonFilePath);
-        // Access the events array from the correct path
         this.data = jsonData.data.events;
         
         this.uniqueStudents = new Map();
@@ -24,9 +23,8 @@ class DataProcessor {
 
     processData() {
         this.data.forEach(event => {
-            // Convert date from DD/MM/YY format to a Date object
             const [day, month, year] = event.date.split('/');
-            const dateStr = `20${year}-${month}-${day}`; // Convert to YYYY-MM-DD
+            const dateStr = `20${year}-${month}-${day}`;
             this.eventDates.push(new Date(dateStr));
 
             event.hours.forEach(hour => {
@@ -42,30 +40,27 @@ class DataProcessor {
     }
 
     _processStudent(student) {
-        // Process student details
-        if (!this.uniqueStudents.has(student.student_id)) {
-            this.uniqueStudents.set(student.student_id, {
-                student_id: student.student_id,
-                name: student.title || `Student ${student.student_id}`, // Fallback if title is missing
+        // Changed to use bbm_id instead of student_id
+        if (!this.uniqueStudents.has(student.bbm_id)) {
+            this.uniqueStudents.set(student.bbm_id, {
+                bbm_id: student.bbm_id,
+                name: student.title || `Student ${student.bbm_id}`,
                 classes: new Set()
             });
         }
         
-        const studentEntry = this.uniqueStudents.get(student.student_id);
+        const studentEntry = this.uniqueStudents.get(student.bbm_id);
         if (student.class_name) {
             studentEntry.classes.add(student.class_name);
             
-            // Track subject student counts
             if (!this.subjectStudentCount.has(student.class_name)) {
                 this.subjectStudentCount.set(student.class_name, new Set());
             }
-            this.subjectStudentCount.get(student.class_name).add(student.student_id);
+            this.subjectStudentCount.get(student.class_name).add(student.bbm_id);
 
-            // Track unique subjects
             this.uniqueSubjects.add(student.class_name);
         }
 
-        // Process teacher details if teacher info exists
         if (student.teacher_id) {
             this._processTeacher(student);
         }
@@ -85,9 +80,9 @@ class DataProcessor {
         if (student.class_name) {
             teacherEntry.subjects.add(student.class_name);
         }
-        teacherEntry.students.add(student.student_id);
+        // Changed to use bbm_id
+        teacherEntry.students.add(student.bbm_id);
 
-        // Track subject teacher counts
         if (student.class_name) {
             if (!this.subjectTeacherCount.has(student.class_name)) {
                 this.subjectTeacherCount.set(student.class_name, new Set());
@@ -113,7 +108,7 @@ class DataProcessor {
             endDate: this._formatDate(endDate),
             details: {
                 students: Array.from(this.uniqueStudents.values()).map(student => ({
-                    id: student.student_id,
+                    bbm_id: student.bbm_id,  // Changed from id to bbm_id
                     name: student.name,
                     classes: Array.from(student.classes)
                 })),
@@ -121,7 +116,7 @@ class DataProcessor {
                     id: teacher.teacher_id,
                     name: teacher.teacher_name,
                     subjects: Array.from(teacher.subjects),
-                    students: Array.from(teacher.students)
+                    students: Array.from(teacher.students)  // These are now bbm_ids
                 })),
                 subjects: Array.from(this.uniqueSubjects).map(subject => ({
                     subject: subject,
@@ -142,5 +137,5 @@ class DataProcessor {
 
 // Usage
 const processor = new DataProcessor('./data_19-24.json');
-processor.checkData(); // First check the data
+processor.checkData();
 const summary = processor.exportSummary();
