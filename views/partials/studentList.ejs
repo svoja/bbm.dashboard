@@ -24,7 +24,7 @@
         <table class="table table-hover">
             <thead class="table-light">
                 <tr>
-                    <th>รหัสนักเรียน</th>
+                    <th>รหัส</th>
                     <th>ชื่อ</th>
                     <th>วิชาที่เรียน</th>
                     <th>ครูผู้สอน</th>
@@ -52,85 +52,55 @@ let currentPage = 1;
 function fetchStudents(page = 1) {
     currentPage = page;
 
+    // Get search and filter values
     const search = document.getElementById('searchInput').value.trim();
     const subject = document.getElementById('subjectFilter').value;
 
+    // Make AJAX request with search, filter, and page
     fetch(`/api/students?page=${page}&search=${encodeURIComponent(search)}&subject=${encodeURIComponent(subject)}`)
         .then(response => response.json())
         .then(data => {
+            // Update the table body with new students
             const studentTableBody = document.getElementById('studentTableBody');
             studentTableBody.innerHTML = data.students.map(student => `
                 <tr>
-                    <td>${student.bbm_id || 'N/A'}</td>
-                    <td>${student.name || 'ไม่ระบุชื่อ'}</td>
-                    <td>${student.classes ? student.classes.map(className => `
+                    <td>${student.bbm_id}</td>
+                    <td>${student.name}</td>
+                    <td>${student.classes.map(className => `
                         <span class="badge rounded-pill bg-primary text-white me-1">${className}</span>
-                    `).join('') : 'ไม่มีวิชาที่ลงทะเบียน'}</td>
-                    <td>${student.teachers && student.teachers.length > 0 ? student.teachers.map(teacherName => `
+                    `).join('')}</td>
+                    <td>${student.teachers.map(teacherName => `
                         <span class="badge rounded-pill bg-secondary text-white me-1">${teacherName}</span>
-                    `).join('') : 'ไม่มีครูผู้สอน'}</td>
+                    `).join('')}</td>
                 </tr>
             `).join('');
 
-            // Update showing count with Thai language
-            const startCount = ((page - 1) * 10) + 1;
-            const endCount = Math.min(startCount + data.students.length - 1, data.totalStudents);
+            // Update showing count
             const countText = data.totalStudents > 0 
-                ? `แสดง ${startCount} ถึง ${endCount} จากทั้งหมด ${data.totalStudents} คน`
-                : 'ไม่พบข้อมูลนักเรียน';
+                ? `แสดง ${data.students.length} จาก ${data.totalStudents} นักเรียน`
+                : 'ไม่พบนักเรียน';
             document.getElementById('studentsCountText').textContent = countText;
 
+            // Update pagination controls
             updatePagination(data.pagination);
         })
-        .catch(error => {
-            console.error('Error fetching students:', error);
-            document.getElementById('studentTableBody').innerHTML = `
-                <tr>
-                    <td colspan="4" class="text-center text-danger">
-                        เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง
-                    </td>
-                </tr>
-            `;
-        });
+        .catch(error => console.error('Error fetching students:', error));
 }
 
 function updatePagination(pagination) {
     const paginationContainer = document.getElementById('paginationContainer');
-    
-    if (pagination.total <= 1) {
-        paginationContainer.innerHTML = '';
-        return;
-    }
 
     let paginationHTML = '';
 
     // Previous button
     paginationHTML += `
         <li class="page-item ${pagination.current === 1 ? 'disabled' : ''}">
-            <button class="page-link" onclick="fetchStudents(${pagination.current - 1})" ${pagination.current === 1 ? 'disabled' : ''}>
-                <span aria-hidden="true">&laquo;</span>
-            </button>
+            <button class="page-link" onclick="fetchStudents(${pagination.current - 1})">«</button>
         </li>
     `;
 
-    // Calculate page range
-    let startPage = Math.max(1, pagination.current - 2);
-    let endPage = Math.min(pagination.total, pagination.current + 2);
-
-    // Add first page and ellipsis if necessary
-    if (startPage > 1) {
-        paginationHTML += `
-            <li class="page-item">
-                <button class="page-link" onclick="fetchStudents(1)">1</button>
-            </li>
-        `;
-        if (startPage > 2) {
-            paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
-        }
-    }
-
     // Page numbers
-    for (let i = startPage; i <= endPage; i++) {
+    for (let i = 1; i <= pagination.total; i++) {
         paginationHTML += `
             <li class="page-item ${pagination.current === i ? 'active' : ''}">
                 <button class="page-link" onclick="fetchStudents(${i})">${i}</button>
@@ -138,31 +108,17 @@ function updatePagination(pagination) {
         `;
     }
 
-    // Add last page and ellipsis if necessary
-    if (endPage < pagination.total) {
-        if (endPage < pagination.total - 1) {
-            paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
-        }
-        paginationHTML += `
-            <li class="page-item">
-                <button class="page-link" onclick="fetchStudents(${pagination.total})">${pagination.total}</button>
-            </li>
-        `;
-    }
-
     // Next button
     paginationHTML += `
         <li class="page-item ${pagination.current === pagination.total ? 'disabled' : ''}">
-            <button class="page-link" onclick="fetchStudents(${pagination.current + 1})" ${pagination.current === pagination.total ? 'disabled' : ''}>
-                <span aria-hidden="true">&raquo;</span>
-            </button>
+            <button class="page-link" onclick="fetchStudents(${pagination.current + 1})">»</button>
         </li>
     `;
 
     paginationContainer.innerHTML = paginationHTML;
 }
 
-// Initial load
+// Fetch initial students on page load
 document.addEventListener('DOMContentLoaded', () => {
     fetchStudents();
 });
