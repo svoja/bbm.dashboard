@@ -20,6 +20,7 @@ const translations = {
   of: 'จาก',
   entries: 'รายการ',
   page: 'หน้า',
+  condition: 'เงื่อนไข',
 };
 
 const StudentCard = ({ data }) => {
@@ -47,6 +48,7 @@ const StudentCard = ({ data }) => {
                 name: student.title || 'No Name',
                 subjects: new Set([student.class_name]),
                 teachers: new Set([student.teacher_name]),
+                condition: student.student_condition || 'N/A',
                 details: []
               });
             }
@@ -191,6 +193,7 @@ const StudentCard = ({ data }) => {
                 <th className="text-left p-2 font-semibold">{translations.name}</th>
                 <th className="text-left p-2 font-semibold">{translations.subjects}</th>
                 <th className="text-left p-2 font-semibold">{translations.teachers}</th>
+                <th className="text-left p-2 font-semibold">{translations.condition}</th>
               </tr>
             </thead>
             <tbody>
@@ -222,6 +225,7 @@ const StudentCard = ({ data }) => {
                       ))}
                     </div>
                   </td>
+                  <td className="p-2">{student.condition}</td>
                 </tr>
               ))}
             </tbody>

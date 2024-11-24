@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, CheckCircle2, XCircle } from 'lucide-react';
+import { X } from 'lucide-react';
 
 const modalTranslations = {
   teacherDetails: 'ข้อมูลครูผู้สอน',

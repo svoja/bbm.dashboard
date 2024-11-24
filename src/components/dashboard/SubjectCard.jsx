@@ -31,7 +31,7 @@ const SubjectDetailModal = ({ subject, onClose }) => {
             <X className="h-6 w-6" />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto">
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
           <div className="space-y-6">
             {/* Teachers */}
             <div>

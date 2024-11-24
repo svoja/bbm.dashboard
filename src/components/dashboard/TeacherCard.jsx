@@ -177,8 +177,9 @@ const TeacherCard = ({ data }) => {
                     <span>{translations.totalHours}: {teacher.totalHours}</span>
                   </div>
                 </div>
-
-                {/* Today's Schedule */}
+                  
+                {/* NO USE YET */}
+                {/* Today's Schedule
                 <div>
                   <h4 className="font-medium mb-2">{translations.scheduleToday}</h4>
                   <div className="space-y-2">
@@ -191,7 +192,8 @@ const TeacherCard = ({ data }) => {
                         </div>
                       ))}
                   </div>
-                </div>
+                </div> */}
+
               </div>
             </div>
           ))}

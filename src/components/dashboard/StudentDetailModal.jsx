@@ -17,7 +17,8 @@ const modalTranslations = {
   status: 'สถานะ',
   checkinTime: 'เวลาเข้าเรียน',
   checkoutTime: 'เวลาเลิกเรียน',
-  close: 'ปิด'
+  close: 'ปิด',
+  condition: 'เงื่อนไข',
 };
 
 const StudentDetailModal = ({ student, onClose }) => {
@@ -53,6 +54,10 @@ const StudentDetailModal = ({ student, onClose }) => {
             <div className="space-y-2">
               <p className="text-sm text-gray-500">{modalTranslations.name}</p>
               <p className="text-lg font-medium">{student.name}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">{modalTranslations.condition}</p>
+              <p className="text-lg font-medium">{student.condition}</p>
             </div>
           </div>
 
