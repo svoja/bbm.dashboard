@@ -4,45 +4,74 @@ const path = require('path');
 const cors = require('cors');
 const app = express();
 
-// Log environment details
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('API_PORT:', process.env.API_PORT);
-
 // Middleware
 app.use(express.json());
 
-// Enable CORS in development
+// Environment-based logging
+console.log('Starting server with:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', process.env.PORT);
+console.log('Current directory:', __dirname);
+
+// CORS configuration
 if (process.env.NODE_ENV === 'development') {
-  console.log('CORS enabled for development');
+  console.log('Enabling CORS for development');
   app.use(cors());
+} else {
+  console.log('Production mode: Setting up static file serving');
 }
 
-// API endpoint to serve the schedule data
+// API Routes
 app.get('/api/schedule', (req, res) => {
   try {
-    // In production, use path.join to handle file paths correctly
-    const scheduleData = require(path.join(__dirname, process.env.NODE_ENV === 'production' ? 'build' : 'src', 'data_19-24.json'));
+    const dataPath = path.join(__dirname, 
+      process.env.NODE_ENV === 'production' ? 'build' : 'src', 
+      'data_19-24.json'
+    );
+    console.log('Loading data from:', dataPath);
+    
+    const scheduleData = require(dataPath);
     res.json(scheduleData);
   } catch (error) {
     console.error('Error loading schedule data:', error);
-    res.status(500).json({ error: 'Failed to load schedule data' });
+    console.error('Error details:', {
+      message: error.message,
+      path: path.join(__dirname, 
+        process.env.NODE_ENV === 'production' ? 'build' : 'src', 
+        'data_19-24.json'
+      )
+    });
+    res.status(500).json({ 
+      error: 'Failed to load schedule data',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
-// Serve static files in production
+// Static file serving for production
 if (process.env.NODE_ENV === 'production') {
-  console.log('Serving static files from:', path.join(__dirname, 'build'));
-  app.use(express.static(path.join(__dirname, 'build')));
+  const buildPath = path.join(__dirname, 'build');
+  console.log('Serving static files from:', buildPath);
   
+  // Serve static files
+  app.use(express.static(buildPath));
+  
+  // SPA fallback
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    res.sendFile(path.join(buildPath, 'index.html'));
   });
 }
 
-const PORT = process.env.NODE_ENV === 'production' ? (process.env.PORT || 3000) : process.env.API_PORT;
+// Port configuration
+const PORT = process.env.NODE_ENV === 'production' 
+  ? (process.env.PORT || 3000)
+  : (process.env.API_PORT || 3001);
 
+// Start server
 app.listen(PORT, () => {
   console.log(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  console.log(`Server URL: http://localhost:${PORT}`);
+  console.log(`API endpoint: http://localhost:${PORT}/api/schedule`);
 });
 
 module.exports = app;

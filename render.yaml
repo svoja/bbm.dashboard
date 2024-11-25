@@ -1,7 +1,8 @@
 services:
   - type: web
-    name: dashboard-app
+    name: dashboard-schedule
     env: node
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
@@ -9,7 +10,5 @@ services:
         value: production
       - key: PORT
         value: 3000
-      - key: API_PORT
-        value: 3000
     healthCheckPath: /api/schedule
-    plan: free
+    autoDeploy: true
