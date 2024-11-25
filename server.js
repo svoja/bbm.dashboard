@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
 const app = express();
 
 // Middleware
@@ -24,23 +25,39 @@ if (process.env.NODE_ENV === 'development') {
 // API Routes
 app.get('/api/schedule', (req, res) => {
   try {
-    const dataPath = path.join(__dirname, 
-      process.env.NODE_ENV === 'production' ? 'build' : 'src', 
-      'data_19-24.json'
-    );
-    console.log('Loading data from:', dataPath);
+    // Try both possible locations for the data file
+    const buildPath = path.join(__dirname, 'build', 'data_19-24.json');
+    const srcPath = path.join(__dirname, 'src', 'data_19-24.json');
     
-    const scheduleData = require(dataPath);
+    let dataPath;
+    if (fs.existsSync(buildPath)) {
+      console.log('Found data file in build directory');
+      dataPath = buildPath;
+    } else if (fs.existsSync(srcPath)) {
+      console.log('Found data file in src directory');
+      dataPath = srcPath;
+    } else {
+      throw new Error('Data file not found in either build or src directory');
+    }
+    
+    console.log('Loading data from:', dataPath);
+    const scheduleData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
     res.json(scheduleData);
   } catch (error) {
     console.error('Error loading schedule data:', error);
-    console.error('Error details:', {
-      message: error.message,
-      path: path.join(__dirname, 
-        process.env.NODE_ENV === 'production' ? 'build' : 'src', 
-        'data_19-24.json'
-      )
-    });
+    console.error('Current directory structure:');
+    try {
+      const buildDir = path.join(__dirname, 'build');
+      const srcDir = path.join(__dirname, 'src');
+      if (fs.existsSync(buildDir)) {
+        console.log('Build directory contents:', fs.readdirSync(buildDir));
+      }
+      if (fs.existsSync(srcDir)) {
+        console.log('Src directory contents:', fs.readdirSync(srcDir));
+      }
+    } catch (e) {
+      console.error('Error listing directories:', e);
+    }
     res.status(500).json({ 
       error: 'Failed to load schedule data',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -63,15 +80,12 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Port configuration
-const PORT = process.env.NODE_ENV === 'production' 
-  ? (process.env.PORT || 3000)
-  : (process.env.API_PORT || 3001);
+const PORT = process.env.PORT || 3000;
 
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-  console.log(`Server URL: http://localhost:${PORT}`);
-  console.log(`API endpoint: http://localhost:${PORT}/api/schedule`);
+  console.log(`Make sure data file exists in either build/ or src/ directory`);
 });
 
 module.exports = app;
